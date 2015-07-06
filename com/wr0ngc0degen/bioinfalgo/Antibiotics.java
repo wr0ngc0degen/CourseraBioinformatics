@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 public class Antibiotics
 {
     public static HashMap<String, String> dnaToAA = new HashMap<String, String>();
-    public static HashMap<String, Integer> aaMasses = new HashMap<String, Integer>();
+    public static HashMap<String, Integer> aaMasses = new HashMap<>();
 
     static
     {
@@ -130,7 +130,23 @@ public class Antibiotics
 */
         //        System.out.println(score("", ""));
 
-        System.out.println(leaderboardCyclopeptideSequencingSet("0 97 99 113 114 115 128 128 147 147 163 186 227 241 242 244 244 256 260 261 262 283 291 309 330 333 340 347 385 388 389 390 390 405 435 447 485 487 503 504 518 544 552 575 577 584 599 608 631 632 650 651 653 672 690 691 717 738 745 770 779 804 818 819 827 835 837 875 892 892 917 932 932 933 934 965 982 989 1039 1060 1062 1078 1080 1081 1095 1136 1159 1175 1175 1194 1194 1208 1209 1223 1322", 1000));
+        massSpectrometryMeetsGolfStep9("0 97 99 113 114 115 128 128 147 147 163 186 227 241 242 244 244 256 260 261 262 283 291 309 330 333 340 347 385 388 389 390 390 405 435 447 485 487 503 504 518 544 552 575 577 584 599 608 631 632 650 651 653 672 690 691 717 738 745 770 779 804 818 819 827 835 837 875 892 892 917 932 932 933 934 965 982 989 1039 1060 1062 1078 1080 1081 1095 1136 1159 1175 1175 1194 1194 1208 1209 1223 1322", 1000);
+    }
+
+    //Mass Spectrometry Meets Golf | Step 9
+    private static void massSpectrometryMeetsGolfStep9(String spectrum, int N)
+    {
+        //to make it work we should modify aaMasses first.
+        //by removing duplicates
+        //in order to expand by mass rather than by letter
+        // that approach allows to store more peptides in the leaderboard
+        aaMasses.remove("L");
+        aaMasses.remove("Q");
+        Set<String> peptides = leaderboardCyclopeptideSequencingSet(spectrum, N);
+        for (String peptide : peptides)
+        {
+            System.out.println(peptide);
+        }
     }
 
     public static Set<String> parsePeptides(String peptides)
@@ -206,9 +222,9 @@ public class Antibiotics
 
     public static Set<String> leaderboardCyclopeptideSequencingSet(String s, int N)
     {
+        Set<String> result = new HashSet<>();
         Set<String> leaderboard = new HashSet<String>();
-        Set<String> result = new HashSet<String>();
-        HashMap<String, Integer> leadersScore = new HashMap<String, Integer>();
+        HashMap<String, Integer> leadersScore = new HashMap<>();
         leaderboard.add("");
         String leaderPeptide = "";
         int[] spectrum = parseSpectrum(s);
@@ -221,7 +237,7 @@ public class Antibiotics
             {
                 if (massOfFragment(peptide) == parentMass)
                 {
-                    if (score(peptide, s) > score(leaderPeptide, s))
+                    if (score(peptide, s) >= score(leaderPeptide, s))
                     {
                         leaderPeptide = peptide;
                         leadersScore.put(peptide, score(peptide, s));
@@ -235,9 +251,10 @@ public class Antibiotics
             trim(leaderboard, s, N);
         }
 
+        int score = score(leaderPeptide, s);
         for (Map.Entry<String, Integer> stringIntegerEntry : leadersScore.entrySet())
         {
-            if (stringIntegerEntry.getValue().equals(score(leaderPeptide, s)))
+            if (stringIntegerEntry.getValue().equals(score))
             {
                 result.add(outputPeptide(stringIntegerEntry.getKey()));
             }
