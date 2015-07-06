@@ -103,34 +103,25 @@ public class Antibiotics
 
     public static void main(String[] args)
     {
-/*
-        Scanner scanner = PatternCount.readFromFile("B_brevis.txt");
-        String genome = "";
-        if (scanner.hasNextLine())
-        {
-            genome = scanner.nextLine();
-        }
-*/
-/*
-        ArrayList<Integer> spec = linearSpectrum("CVFCRRLAFFLSWTHAEKDRFVEQSYRSAMWVNQMCHMLPHEGTRYQTY");
-        Collections.sort(spec);
-        for (Integer integer : spec)
-        {
-            System.out.print(integer + " ");
-        }
-*/
+        from20ToMoreThan100AminoAcids("0 97 99 114 128 147 147 163 186 227 241 242 244 260 261 262 283 291 333 340 357 385 389 390 390 405 430 430 447 485 487 503 504 518 543 544 552 575 577 584 632 650 651 671 672 690 691 738 745 747 770 778 779 804 818 819 820 835 837 875 892 917 932 932 933 934 965 982 989 1030 1039 1060 1061 1062 1078 1080 1081 1095 1136 1159 1175 1175 1194 1194 1208 1209 1223 1225 1322", 1000);
+    }
 
-
-/*
-        Set<String> result = cyclopeptideSequencing("");
-        for (String s : result)
+    //From 20 to More than 100 Amino Acids | Step 1
+    private static void from20ToMoreThan100AminoAcids(String spectrum, int N)
+    {
+        //the idea is thes same as in Mass Spectrometry Meets Golf | Step 9
+        //modifying aaMasses to include all the aminoacids with weights from 57 to 200
+        aaMasses.clear();
+        for (int i = 57; i < 201; i++)
         {
-            System.out.print(s + " ");
+            char c = (char) i;
+            aaMasses.put(String.valueOf(c), i);
         }
-*/
-        //        System.out.println(score("", ""));
-
-        massSpectrometryMeetsGolfStep9("0 97 99 113 114 115 128 128 147 147 163 186 227 241 242 244 244 256 260 261 262 283 291 309 330 333 340 347 385 388 389 390 390 405 435 447 485 487 503 504 518 544 552 575 577 584 599 608 631 632 650 651 653 672 690 691 717 738 745 770 779 804 818 819 827 835 837 875 892 892 917 932 932 933 934 965 982 989 1039 1060 1062 1078 1080 1081 1095 1136 1159 1175 1175 1194 1194 1208 1209 1223 1322", 1000);
+        Set<String> peptides = leaderboardCyclopeptideSequencingSet(spectrum, N);
+        for (String peptide : peptides)
+        {
+            System.out.println(peptide);
+        }
     }
 
     //Mass Spectrometry Meets Golf | Step 9
@@ -232,7 +223,7 @@ public class Antibiotics
         while (!leaderboard.isEmpty())
         {
             expand(leaderboard);
-            Set<String> toRemove = new HashSet<String>();
+            Set<String> toRemove = new HashSet<>();
             for (String peptide : leaderboard)
             {
                 if (massOfFragment(peptide) == parentMass)
