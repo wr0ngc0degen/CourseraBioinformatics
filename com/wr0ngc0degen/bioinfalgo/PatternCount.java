@@ -49,22 +49,6 @@ public class PatternCount
         System.out.println("reverseCompliment");
         System.out.println(reverseCompliment("GCTAGCT"));
 
-        System.out.println("hammingDistance");
-        System.out.println(hammingDistance("CAGAAAGGAAGGTCCCCATACACCGACGCACCAGTTTA", "CACGCCGTATGCATAAACGAGCCGCACGAACCAGAGAG"));
-
-        System.out.println("minSkew");
-        int[] computeSkew = computeSkew("CATTCCAGTACTTCATGATGGCGTGAAGA");
-        Set<Integer> minSkew = minSkew(computeSkew);
-        System.out.println(minSkew);
-        for (int i = 0; i < computeSkew.length; i++)
-        {
-            System.out.print(computeSkew[i]);
-
-        }
-        System.out.println();
-
-        System.out.println("count");
-        System.out.println(count("TACGCATTACAAAGCACA", "AA", 1));
 */
     }
 
@@ -82,6 +66,27 @@ public class PatternCount
         //reverse complement
         System.out.println("\nreverse complement");
         System.out.println(reverseCompliment("CCAGATC"));
+    }
+
+    private static void quizTwo()
+    {
+        System.out.println("hammingDistance");
+        System.out.println(hammingDistance("CTTGAAGTGGACCTCTAGTTCCTCTACAAAGAACAGGTTGACCTGTCGCGAAG",
+                "ATGCCTTACCTAGATGCAATGACGGACGTATTCCTTTTGCCTCAACGGCTCCT"));
+
+        System.out.println("minSkew");
+        int[] computeSkew = computeSkew("GATACACTTCCCGAGTAGGTACTG");
+        Set<Integer> minSkew = minSkew(computeSkew);
+        System.out.println(minSkew);
+        for (int i = 0; i < computeSkew.length; i++)
+        {
+            System.out.print(computeSkew[i]);
+
+        }
+        System.out.println();
+
+        System.out.println("count");
+        System.out.println(count("CATGCCATTCGCATTGTCCCAGTGA", "CCC", 2));
     }
 
     public static Set<String> frequentWordsWithMismatchAndReverse(String text, int k, int dist)
