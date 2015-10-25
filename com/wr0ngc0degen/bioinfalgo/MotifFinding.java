@@ -1,7 +1,8 @@
 package com.wr0ngc0degen.bioinfalgo;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.*;
 
 /**
  * Created by Alena on 30.11.2014.
@@ -10,23 +11,40 @@ public class MotifFinding
 {
     public static char[] alphabet = new char[]{'A', 'C', 'G', 'T'};
 
-    public static void main(String[] args)
+    public static void main(String[] args) throws FileNotFoundException
     {
-        Set<String> dnas = new HashSet<String>();
-        dnas.add("TCGCCGTGACGTCACCGTTTCTGAT");
-        dnas.add("TCTCCGTGAGTAAGCTAGGAGTGCT");
-        dnas.add("GTGACCGATGTACCCGGCGCGGGCG");
-        dnas.add("TGATGGAACACGCTCTGCGGGTGAG");
-        dnas.add("GGGAGGGGTAGTGAGATAGGAGTTC");
-        dnas.add("TATTTGTGATGACACGCTCGTCCAT");
+        motifEnumeration("dataset_156_7.txt");
+    }
 
-        for (String s : motifEnumeration(dnas, 5, 1))
+    /*
+    CODE CHALLENGE: Implement MOTIFENUMERATION.
+     Input: Integers k and d, followed by a collection of strings Dna.
+     Output: All (k, d)-motifs in Dna
+     */
+    //Motif Finding Is More Difficult Than You Think | Step 7
+    private static void motifEnumeration(String fileName) throws FileNotFoundException
+    {
+        Scanner scanner = new Scanner(new File(fileName));
+        String line = scanner.nextLine();
+        String[] kd = line.split(" ");
+        int k = Integer.parseInt(kd[0]);
+        int d = Integer.parseInt(kd[1]);
+        Set<String> dnas = new HashSet<>();
+        while (scanner.hasNextLine())
+        {
+            dnas.add(scanner.nextLine());
+        }
+
+        Set<String> patterns = motifEnumeration(dnas, k, d);
+        List<String> patternList = new ArrayList<>(patterns);
+        Collections.sort(patternList);
+        for (String s : patternList)
         {
             System.out.print(s + " ");
         }
     }
 
-    public static Set<String> motifEnumeration(Set<String> dnas, int k, int d)
+    private static Set<String> motifEnumeration(Set<String> dnas, int k, int d)
     {
         Set<String> patterns = new HashSet<String>();
         Set<String> allKMersFromDNAs = getAllKmers(dnas, k);
