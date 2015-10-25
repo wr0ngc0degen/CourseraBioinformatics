@@ -71,17 +71,15 @@ public class PatternCount
     private static void quizTwo()
     {
         System.out.println("hammingDistance");
-        System.out.println(hammingDistance("CTTGAAGTGGACCTCTAGTTCCTCTACAAAGAACAGGTTGACCTGTCGCGAAG",
-                "ATGCCTTACCTAGATGCAATGACGGACGTATTCCTTTTGCCTCAACGGCTCCT"));
+        System.out.println(hammingDistance("CTTGAAGTGGACCTCTAGTTCCTCTACAAAGAACAGGTTGACCTGTCGCGAAG", "ATGCCTTACCTAGATGCAATGACGGACGTATTCCTTTTGCCTCAACGGCTCCT"));
 
         System.out.println("minSkew");
         int[] computeSkew = computeSkew("GATACACTTCCCGAGTAGGTACTG");
         Set<Integer> minSkew = minSkew(computeSkew);
         System.out.println(minSkew);
-        for (int i = 0; i < computeSkew.length; i++)
+        for (int aComputeSkew : computeSkew)
         {
-            System.out.print(computeSkew[i]);
-
+            System.out.print(aComputeSkew);
         }
         System.out.println();
 
