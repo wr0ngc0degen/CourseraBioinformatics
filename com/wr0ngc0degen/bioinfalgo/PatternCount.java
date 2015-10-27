@@ -90,11 +90,7 @@ public class PatternCount
     public static Set<String> frequentWordsWithMismatchAndReverse(String text, int k, int dist)
     {
         Set<String> result = new HashSet<String>();
-        Set<String> kmers = new HashSet<String>();
-        for (int i = 0; i < (int) Math.pow(4, k); i++)
-        {
-            kmers.add(numberToPattern(i, k));
-        }
+        Set<String> kmers = generateAllKmers(k);
 
         for (int i = 0; i < text.length() - k + 1; i++)
         {
@@ -142,14 +138,20 @@ public class PatternCount
         return result;
     }
 
-    public static Set<String> frequentWordsWithMismatch(String text, int k, int dist)
+    public static Set<String> generateAllKmers(int k)
     {
-        Set<String> result = new HashSet<String>();
         Set<String> kmers = new HashSet<String>();
         for (int i = 0; i < (int) Math.pow(4, k); i++)
         {
             kmers.add(numberToPattern(i, k));
         }
+        return kmers;
+    }
+
+    public static Set<String> frequentWordsWithMismatch(String text, int k, int dist)
+    {
+        Set<String> result = new HashSet<String>();
+        Set<String> kmers = generateAllKmers(k);
 
         for (int i = 0; i < text.length() - k + 1; i++)
         {

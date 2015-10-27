@@ -13,7 +13,62 @@ public class MotifFinding
 
     public static void main(String[] args) throws FileNotFoundException
     {
-        motifEnumeration("dataset_156_7.txt");
+        //        motifEnumeration("dataset_156_7.txt");
+        medianString("dataset_158_9.txt");
+    }
+
+    /*
+    CODE CHALLENGE: Implement MEDIANSTRING.
+     Input: An integer k, followed by a collection of strings Dna.
+     Output: A k-mer Pattern that minimizes d(Pattern, Dna) among all k-mers Pattern. (If there are
+     multiple such strings Pattern, then you may return any one.)
+     */
+    //From Motif Finding to Finding a Median String | Step 9
+    private static void medianString(String fileName) throws FileNotFoundException
+    {
+        Scanner scanner = new Scanner(new File(fileName));
+        String line = scanner.nextLine();
+        int k = Integer.parseInt(line);
+        List<String> dnas = new ArrayList<>();
+        while (scanner.hasNextLine())
+        {
+            dnas.add(scanner.nextLine());
+        }
+        System.out.println(medianString(k, dnas));
+    }
+
+    private static String medianString(int k, List<String> dnas)
+    {
+        Set<String> allKmers = PatternCount.generateAllKmers(k);
+        int distance = Integer.MAX_VALUE;
+        String median = "";
+        for (String pattern : allKmers)
+        {
+            int distanceFromPatternToDNAs = distanceFromPatternToDNAs(pattern, dnas);
+            if (distance > distanceFromPatternToDNAs)
+            {
+                distance = distanceFromPatternToDNAs;
+                median = pattern;
+            }
+        }
+        return median;
+    }
+
+    private static int distanceFromPatternToDNAs(String pattern, List<String> dnas)
+    {
+        return dnas.stream().mapToInt(value -> minDistancePatternFromDNA(pattern, value)).sum();
+    }
+
+    private static int minDistancePatternFromDNA(String pattern, String dna)
+    {
+        int k = pattern.length();
+        int numKmersInDNA = dna.length() - k + 1;
+        List<String> dnaKmers = new ArrayList<>(numKmersInDNA);
+        for (int i = 0; i < numKmersInDNA; i++)
+        {
+            dnaKmers.add(dna.substring(i, i + k));
+        }
+        return dnaKmers.stream().mapToInt(value -> PatternCount.hammingDistance(value, pattern)).min().getAsInt();
     }
 
     /*
@@ -125,7 +180,7 @@ public class MotifFinding
 
     public static Set<String> neighbors(String pattern, int d)
     {
-        Set<String> neighborhood = new HashSet<String>();
+        Set<String> neighborhood = new HashSet<>();
         if (d == 0)
         {
             neighborhood.add(pattern);
