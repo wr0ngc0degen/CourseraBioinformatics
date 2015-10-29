@@ -14,7 +14,56 @@ public class MotifFinding
     public static void main(String[] args) throws FileNotFoundException
     {
         //        motifEnumeration("dataset_156_7.txt");
-        medianString("dataset_158_9.txt");
+        //        medianString("dataset_158_9.txt");
+        //        profileMostProbableKmer("dataset_159_3.txt");
+    }
+
+    /*
+    CODE CHALLENGE: Solve the Profile-most Probable k-mer Problem.
+    Profile-most Probable k-mer Problem: Find a Profile-most probable k-mer in a string.
+     Input: A string Text, an integer k, and a 4 ? k matrix Profile.
+     Output: A Profile-most probable k-mer in Text.
+     */
+    //Greedy Motif Search | Step 3
+    private static void profileMostProbableKmer(String fileName) throws FileNotFoundException
+    {
+        Scanner scanner = new Scanner(new File(fileName));
+        String text = scanner.nextLine();
+        int k = Integer.parseInt(scanner.nextLine());
+        double[][] matrix = new double[4][text.length()];
+        for (int i = 0; i < 4; i++)
+        {
+            String line = scanner.nextLine();
+            matrix[i] = Arrays.stream(line.split(" ")).mapToDouble(Double::parseDouble).toArray();
+        }
+        System.out.println(profileMostProbableKmer(text, k, matrix));
+    }
+
+    private static String profileMostProbableKmer(String text, int k, double[][] matrix) throws FileNotFoundException
+    {
+        List<String> kmers = new ArrayList<>();
+        for (int i = 0; i < text.length() - k + 1; i++)
+        {
+            String kmer = text.substring(i, i + k);
+            kmers.add(kmer);
+        }
+        return kmers.stream().max((o1, o2) -> ((Double) getScore(o1, matrix)).compareTo(getScore(o2, matrix))).get();
+    }
+
+    private static double getScore(String motif, double[][] matrix)
+    {
+        double result = 1;
+        char[] chars = motif.toCharArray();
+        for (int i = 0; i < chars.length; i++)
+        {
+            result *= getProbForChar(matrix, i, chars[i]);
+        }
+        return result;
+    }
+
+    private static double getProbForChar(double[][] matrix, int pos, char ch)
+    {
+        return matrix[PatternCount.charToInt(ch)][pos];
     }
 
     /*
