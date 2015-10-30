@@ -3,6 +3,7 @@ package com.wr0ngc0degen.bioinfalgo;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by Alena on 30.11.2014.
@@ -16,6 +17,112 @@ public class MotifFinding
         //        motifEnumeration("dataset_156_7.txt");
         //        medianString("dataset_158_9.txt");
         //        profileMostProbableKmer("dataset_159_3.txt");
+        //        greedyMotifSearch("dataset_159_5.txt");
+    }
+
+    /*
+    CODE CHALLENGE: Implement GREEDYMOTIFSEARCH.
+    Input: Integers k and t, followed by a collection of strings Dna.
+    Output: A collection of strings BestMotifs resulting from applying GREEDYMOTIFSEARCH(Dna,k,t).
+    If at any step you find more than one Profile-most probable k-mer in a given string, use the
+    one occurring first.
+     */
+    //Greedy Motif Search | Step 5
+    private static void greedyMotifSearch(String fileName) throws FileNotFoundException
+    {
+        Scanner scanner = new Scanner(new File(fileName));
+        String[] kt = scanner.nextLine().split(" ");
+        int k = Integer.parseInt(kt[0]);
+        int t = Integer.parseInt(kt[1]);
+        List<String> dnas = new ArrayList<>();
+        while (scanner.hasNextLine())
+        {
+            dnas.add(scanner.nextLine());
+        }
+        List<String> bestMotifs = greedyMotifSearch(dnas, k, t);
+        bestMotifs.stream().forEach(System.out::println);
+    }
+
+    private static List<String> greedyMotifSearch(List<String> dnas, int k, int numberOfSequences)
+    {
+        List<String> bestMotifs = dnas.stream().map(s -> s.substring(0, k)).collect(Collectors.toList());
+        String firstDNA = dnas.get(0);
+
+        for (int i = 0; i < firstDNA.length() - k + 1; i++)
+        {
+            List<String> motifs = new ArrayList<>(numberOfSequences);
+            String kmer = firstDNA.substring(i, i + k);
+            motifs.add(kmer);
+            for (int j = 1; j < numberOfSequences; j++)
+            {
+                String currentDNA = dnas.get(j);
+                double[][] profile = calculateProfile(motifs);
+                String kmerToAdd = profileMostProbableKmer(currentDNA, k, profile);
+                motifs.add(kmerToAdd);
+            }
+            if (distanceFromPatternToDNAs(findConsensus(bestMotifs), bestMotifs) > distanceFromPatternToDNAs(findConsensus(motifs), motifs))
+            {
+                bestMotifs = motifs;
+            }
+        }
+        return bestMotifs;
+    }
+
+    private static String findConsensus(List<String> motifs)
+    {
+        double[][] profile = calculateProfile(motifs);
+        char[] consensus = new char[profile[0].length];
+
+        //transpose the profile to ease calculation
+        double[][] transposed = new double[profile[0].length][profile.length];
+        for (int i = 0; i < profile.length; i++)
+        {
+            double[] doubles = profile[i];
+            for (int j = 0; j < doubles.length; j++)
+            {
+                transposed[j][i] = profile[i][j];
+            }
+        }
+        for (int i = 0; i < transposed.length; i++)
+        {
+            double[] doubles = transposed[i];
+            double max = Arrays.stream(doubles).max().getAsDouble();
+            for (int j = 0; j < doubles.length; j++)
+            {
+                double aDouble = doubles[j];
+                if (aDouble == max)
+                {
+                    consensus[i] = PatternCount.intToChar(j);
+                }
+            }
+        }
+        return new String(consensus);
+    }
+
+    private static double[][] calculateProfile(List<String> motifs)
+    {
+        String firstMotif = motifs.get(0);
+        double[][] profile = new double[4][firstMotif.length()];
+
+        int numberOfSequences = motifs.size();
+
+        //filling the matrix with count of every letter
+        for (int i = 0; i < firstMotif.length(); i++)
+        {
+            for (String motif : motifs)
+            {
+                char charAtI = motif.charAt(i);
+                profile[PatternCount.charToInt(charAtI)][i] += 1;
+            }
+        }
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < firstMotif.length(); j++)
+            {
+                profile[i][j] = profile[i][j] / numberOfSequences;
+            }
+        }
+        return profile;
     }
 
     /*
@@ -39,7 +146,7 @@ public class MotifFinding
         System.out.println(profileMostProbableKmer(text, k, matrix));
     }
 
-    private static String profileMostProbableKmer(String text, int k, double[][] matrix) throws FileNotFoundException
+    private static String profileMostProbableKmer(String text, int k, double[][] matrix)
     {
         List<String> kmers = new ArrayList<>();
         for (int i = 0; i < text.length() - k + 1; i++)
@@ -150,7 +257,7 @@ public class MotifFinding
 
     private static Set<String> motifEnumeration(Set<String> dnas, int k, int d)
     {
-        Set<String> patterns = new HashSet<String>();
+        Set<String> patterns = new HashSet<>();
         Set<String> allKMersFromDNAs = getAllKmers(dnas, k);
 
         for (String kmer : allKMersFromDNAs)
@@ -194,7 +301,7 @@ public class MotifFinding
 
     private static Set<String> getAllKmers(Set<String> dnas, int k)
     {
-        Set<String> allKMersFromDNAs = new HashSet<String>();
+        Set<String> allKMersFromDNAs = new HashSet<>();
         for (String dna : dnas)
         {
             for (int i = 0; i < dna.length() - k + 1; i++)
@@ -208,7 +315,7 @@ public class MotifFinding
 
     public static Set<String> immediateNeighbors(String pattern)
     {
-        Set<String> neighborhood = new HashSet<String>();
+        Set<String> neighborhood = new HashSet<>();
         neighborhood.add(pattern);
         int length = pattern.length();
         for (int i = 0; i < length; i++)
