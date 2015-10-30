@@ -197,7 +197,7 @@ public class MotifFinding
         Set<String> allKMersFromDNAs = new HashSet<String>();
         for (String dna : dnas)
         {
-            for (int i = 0; i < dna.length() - k; i++)
+            for (int i = 0; i < dna.length() - k + 1; i++)
             {
                 String kmer = dna.substring(i, i + k);
                 allKMersFromDNAs.add(kmer);
