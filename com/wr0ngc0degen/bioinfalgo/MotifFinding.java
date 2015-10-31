@@ -18,6 +18,55 @@ public class MotifFinding
         //        medianString("dataset_158_9.txt");
         //        profileMostProbableKmer("dataset_159_3.txt");
         //        greedyMotifSearch("dataset_159_5.txt");
+        greedyMotifSearchWithPseudocounts("dataset_160_9.txt");
+    }
+
+    /*
+    CODE CHALLENGE: Implement GREEDYMOTIFSEARCH with pseudocounts.
+     Input: Integers k and t, followed by a collection of strings Dna.
+     Output: A collection of strings BestMotifs resulting from applying GREEDYMOTIFSEARCH(Dna,k,t) with
+     pseudocounts. If at any step you find more than one Profile-most probable k-mer in a given string,
+     use the one occurring first.
+     */
+    //Motif Finding Meets Oliver Cromwell | Step 9
+    private static void greedyMotifSearchWithPseudocounts(String fileName) throws FileNotFoundException
+    {
+        Scanner scanner = new Scanner(new File(fileName));
+        String[] kt = scanner.nextLine().split(" ");
+        int k = Integer.parseInt(kt[0]);
+        int t = Integer.parseInt(kt[1]);
+        List<String> dnas = new ArrayList<>();
+        while (scanner.hasNextLine())
+        {
+            dnas.add(scanner.nextLine());
+        }
+        List<String> bestMotifs = greedyMotifSearchWithPseudocounts(dnas, k, t);
+        bestMotifs.stream().forEach(System.out::println);
+    }
+
+    private static List<String> greedyMotifSearchWithPseudocounts(List<String> dnas, int k, int numberOfSequences)
+    {
+        List<String> bestMotifs = dnas.stream().map(s -> s.substring(0, k)).collect(Collectors.toList());
+        String firstDNA = dnas.get(0);
+
+        for (int i = 0; i < firstDNA.length() - k + 1; i++)
+        {
+            List<String> motifs = new ArrayList<>(numberOfSequences);
+            String kmer = firstDNA.substring(i, i + k);
+            motifs.add(kmer);
+            for (int j = 1; j < numberOfSequences; j++)
+            {
+                String currentDNA = dnas.get(j);
+                double[][] profile = calculateProfileWithPseudocounts(motifs);
+                String kmerToAdd = profileMostProbableKmer(currentDNA, k, profile);
+                motifs.add(kmerToAdd);
+            }
+            if (distanceFromPatternToDNAs(findConsensus(bestMotifs), bestMotifs) > distanceFromPatternToDNAs(findConsensus(motifs), motifs))
+            {
+                bestMotifs = motifs;
+            }
+        }
+        return bestMotifs;
     }
 
     /*
@@ -97,6 +146,32 @@ public class MotifFinding
             }
         }
         return new String(consensus);
+    }
+
+    private static double[][] calculateProfileWithPseudocounts(List<String> motifs)
+    {
+        String firstMotif = motifs.get(0);
+        double[][] profile = new double[4][firstMotif.length()];
+
+        int numberOfSequences = motifs.size();
+
+        //filling the matrix with count of every letter
+        for (int i = 0; i < firstMotif.length(); i++)
+        {
+            for (String motif : motifs)
+            {
+                char charAtI = motif.charAt(i);
+                profile[PatternCount.charToInt(charAtI)][i] += 1;
+            }
+        }
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < firstMotif.length(); j++)
+            {
+                profile[i][j] = (profile[i][j] + 1) / (numberOfSequences + 4);
+            }
+        }
+        return profile;
     }
 
     private static double[][] calculateProfile(List<String> motifs)
