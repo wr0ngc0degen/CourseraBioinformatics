@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Created by Alena on 30.11.2014.
@@ -18,7 +19,57 @@ public class MotifFinding
         //        medianString("dataset_158_9.txt");
         //        profileMostProbableKmer("dataset_159_3.txt");
         //        greedyMotifSearch("dataset_159_5.txt");
-        greedyMotifSearchWithPseudocounts("dataset_160_9.txt");
+        //        greedyMotifSearchWithPseudocounts("dataset_160_9.txt");
+        //        randomizedMotifSearch("dataset_161_5.txt");
+    }
+
+    /*
+    CODE CHALLENGE: Implement RANDOMIZEDMOTIFSEARCH.
+     Input: Integers k and t, followed by a collection of strings Dna.
+     Output: A collection BestMotifs resulting from running RANDOMIZEDMOTIFSEARCH(Dna, k, t) 1,000
+     times. Remember to use pseudocounts!
+     */
+    //Randomized Motif Search | Step 5
+    private static void randomizedMotifSearch(String fileName) throws FileNotFoundException
+    {
+        Scanner scanner = new Scanner(new File(fileName));
+        String[] kt = scanner.nextLine().split(" ");
+        int k = Integer.parseInt(kt[0]);
+        int t = Integer.parseInt(kt[1]);
+        List<String> dnas = new ArrayList<>(t);
+        while (scanner.hasNextLine())
+        {
+            dnas.add(scanner.nextLine());
+        }
+        List<List<String>> allTries = IntStream.iterate(0, n -> n + 1).limit(1000).mapToObj(value -> randomizedMotifSearch(dnas, k, t)).collect(Collectors.toList());
+        allTries.stream().min((motifs1, motifs2) -> ((Integer) score(motifs1)).compareTo(score(motifs2))).get().forEach(System.out::println);
+    }
+
+    private static List<String> randomizedMotifSearch(List<String> dnas, int k, int t)
+    {
+        List<String> bestMotifs = randomlySelectKmers(dnas, k);
+        while (true)
+        {
+            double[][] profile = calculateProfileWithPseudocounts(bestMotifs);
+            List<String> motifs = dnas.stream().map(s -> profileMostProbableKmer(s, k, profile)).collect(Collectors.toList());
+            if (score(motifs) < score(bestMotifs))
+            {
+                bestMotifs = motifs;
+            } else
+            {
+                return bestMotifs;
+            }
+        }
+    }
+
+    private static List<String> randomlySelectKmers(List<String> dnas, int k)
+    {
+        int length = dnas.get(0).length();
+        Random random = new Random();
+        return dnas.stream().map(s -> {
+            int start = random.nextInt(length - k + 1);
+            return s.substring(start, start + k);
+        }).collect(Collectors.toList());
     }
 
     /*
@@ -61,12 +112,17 @@ public class MotifFinding
                 String kmerToAdd = profileMostProbableKmer(currentDNA, k, profile);
                 motifs.add(kmerToAdd);
             }
-            if (distanceFromPatternToDNAs(findConsensus(bestMotifs), bestMotifs) > distanceFromPatternToDNAs(findConsensus(motifs), motifs))
+            if (score(bestMotifs) > score(motifs))
             {
                 bestMotifs = motifs;
             }
         }
         return bestMotifs;
+    }
+
+    private static int score(List<String> bestMotifs)
+    {
+        return distanceFromPatternToDNAs(findConsensus(bestMotifs), bestMotifs);
     }
 
     /*
@@ -109,7 +165,7 @@ public class MotifFinding
                 String kmerToAdd = profileMostProbableKmer(currentDNA, k, profile);
                 motifs.add(kmerToAdd);
             }
-            if (distanceFromPatternToDNAs(findConsensus(bestMotifs), bestMotifs) > distanceFromPatternToDNAs(findConsensus(motifs), motifs))
+            if (score(bestMotifs) > score(motifs))
             {
                 bestMotifs = motifs;
             }
@@ -229,10 +285,10 @@ public class MotifFinding
             String kmer = text.substring(i, i + k);
             kmers.add(kmer);
         }
-        return kmers.stream().max((o1, o2) -> ((Double) getScore(o1, matrix)).compareTo(getScore(o2, matrix))).get();
+        return kmers.stream().max((o1, o2) -> ((Double) getProfileScore(o1, matrix)).compareTo(getProfileScore(o2, matrix))).get();
     }
 
-    private static double getScore(String motif, double[][] matrix)
+    private static double getProfileScore(String motif, double[][] matrix)
     {
         double result = 1;
         char[] chars = motif.toCharArray();
