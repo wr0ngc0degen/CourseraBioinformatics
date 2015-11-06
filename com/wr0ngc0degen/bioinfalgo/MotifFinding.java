@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
 /**
@@ -12,6 +13,8 @@ import java.util.stream.IntStream;
 public class MotifFinding
 {
     public static char[] alphabet = new char[]{'A', 'C', 'G', 'T'};
+    public static Map<String, List<String>> CACHED_KMERS = new HashMap<>();
+    public static Random RANDOM = new Random();
 
     public static void main(String[] args) throws FileNotFoundException
     {
@@ -21,6 +24,77 @@ public class MotifFinding
         //        greedyMotifSearch("dataset_159_5.txt");
         //        greedyMotifSearchWithPseudocounts("dataset_160_9.txt");
         //        randomizedMotifSearch("dataset_161_5.txt");
+        //        gibbsSampler("dataset_163_4.txt");
+    }
+
+    /*
+    CODE CHALLENGE: Implement GIBBSSAMPLER.
+     Input: Integers k, t, and N, followed by a collection of strings Dna.
+     Output: The strings BestMotifs resulting from running GIBBSSAMPLER(Dna, k, t, N) with
+     20 random starts. Remember to use pseudocounts!
+     */
+    //Gibbs Sampling | Step 4
+    private static void gibbsSampler(String fileName) throws FileNotFoundException
+    {
+        Scanner scanner = new Scanner(new File(fileName));
+        String[] ktN = scanner.nextLine().split(" ");
+        int k = Integer.parseInt(ktN[0]);
+        int t = Integer.parseInt(ktN[1]);
+        int N = Integer.parseInt(ktN[2]);
+        List<String> dnas = new ArrayList<>(t);
+        while (scanner.hasNextLine())
+        {
+            dnas.add(scanner.nextLine());
+        }
+
+        List<List<String>> allTries = IntStream.iterate(0, n -> n + 1).limit(80).mapToObj(value -> gibbsSampler(dnas, k, t, N)).collect(Collectors.toList());
+        allTries.stream().min((motifs1, motifs2) -> ((Integer) score(motifs1)).compareTo(score(motifs2))).get().forEach(System.out::println);
+    }
+
+    private static List<String> gibbsSampler(List<String> dnas, int k, int t, int N)
+    {
+        List<String> bestMotifs = randomlySelectKmers(dnas, k);
+        for (int j = 0; j < N; j++)
+        {
+            int i = RANDOM.nextInt(t);
+            double[][] profile = calculateProfileWithPseudocounts(removeIthString(bestMotifs, i));
+            String changedMotif = profileRandomlyGeneratedKmerInSequence(dnas.get(i), k, profile);
+            List<String> motifs = new ArrayList<>(bestMotifs.size());
+            motifs.addAll(bestMotifs);
+            motifs.set(i, changedMotif);
+            if (score(motifs) < score(bestMotifs))
+            {
+                bestMotifs = motifs;
+            }
+        }
+        return bestMotifs;
+    }
+
+    private static String profileRandomlyGeneratedKmerInSequence(String text, int k, double[][] profile)
+    {
+        List<String> kmers = getAllKmersFromTextWithCaching(text, k);
+        double[] weights = kmers.stream().mapToDouble(value -> getProfileScore(value, profile)).toArray();
+        double weightSum = DoubleStream.of(weights).sum();
+        double value = RANDOM.nextDouble() * weightSum;
+        // locate the random value based on the weights
+        for (int i = 0; i < weights.length; i++)
+        {
+            value -= weights[i];
+            if (value <= 0)
+            {
+                return text.substring(i, i + k);
+            }
+        }
+        // only when rounding errors occur
+        return text.substring(weights.length - 1, weights.length - 1 + k);
+    }
+
+    private static List<String> removeIthString(List<String> motifs, int i)
+    {
+        List<String> reducedMotifs = new ArrayList<>(motifs.size() - 1);
+        reducedMotifs.addAll(motifs);
+        reducedMotifs.remove(i);
+        return reducedMotifs;
     }
 
     /*
@@ -65,9 +139,8 @@ public class MotifFinding
     private static List<String> randomlySelectKmers(List<String> dnas, int k)
     {
         int length = dnas.get(0).length();
-        Random random = new Random();
         return dnas.stream().map(s -> {
-            int start = random.nextInt(length - k + 1);
+            int start = RANDOM.nextInt(length - k + 1);
             return s.substring(start, start + k);
         }).collect(Collectors.toList());
     }
@@ -120,9 +193,9 @@ public class MotifFinding
         return bestMotifs;
     }
 
-    private static int score(List<String> bestMotifs)
+    private static int score(List<String> motifs)
     {
-        return distanceFromPatternToDNAs(findConsensus(bestMotifs), bestMotifs);
+        return distanceFromPatternToDNAs(findConsensus(motifs), motifs);
     }
 
     /*
@@ -279,13 +352,35 @@ public class MotifFinding
 
     private static String profileMostProbableKmer(String text, int k, double[][] matrix)
     {
+        List<String> kmers = getAllKmersFromText(text, k);
+        return kmers.stream().max((o1, o2) -> ((Double) getProfileScore(o1, matrix)).compareTo(getProfileScore(o2, matrix))).get();
+    }
+
+    private static List<String> getAllKmersFromTextWithCaching(String text, int k)
+    {
+        if (CACHED_KMERS.containsKey(text))
+        {
+            return CACHED_KMERS.get(text);
+        }
         List<String> kmers = new ArrayList<>();
         for (int i = 0; i < text.length() - k + 1; i++)
         {
             String kmer = text.substring(i, i + k);
             kmers.add(kmer);
         }
-        return kmers.stream().max((o1, o2) -> ((Double) getProfileScore(o1, matrix)).compareTo(getProfileScore(o2, matrix))).get();
+        CACHED_KMERS.put(text, kmers);
+        return kmers;
+    }
+
+    private static List<String> getAllKmersFromText(String text, int k)
+    {
+        List<String> kmers = new ArrayList<>();
+        for (int i = 0; i < text.length() - k + 1; i++)
+        {
+            String kmer = text.substring(i, i + k);
+            kmers.add(kmer);
+        }
+        return kmers;
     }
 
     private static double getProfileScore(String motif, double[][] matrix)
